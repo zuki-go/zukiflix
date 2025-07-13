@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Carrusel Completo</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            bebas: ['Bebas Neue', 'sans-serif'],
+          },
+          colors: {
+            morado: '#a855f7',
+          },
+        },
+      },
+    };
+  </script>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap" rel="stylesheet">
+  <style>
+    body::-webkit-scrollbar {
+      display: none;
+    }
+  </style>
+</head>
+<body class="bg-black text-white font-sans px-6 py-10 relative">
+
+  <!-- Pantalla de carga -->
+  <div id="loader" class="fixed inset-0 bg-black flex items-center justify-center z-50">
+    <span class="text-morado text-8xl font-black animate-pulse">K</span>
+  </div>
+
+  <!-- Carruseles -->
+  <div id="contenedorCarruseles" class="space-y-12 hidden"></div>
+
+  <!-- Página de categoría -->
+  <div id="paginaCategoria" class="hidden">
+    <button onclick="volverInicio()" class="mb-4 text-morado hover:underline">← Volver</button>
+    <h2 id="tituloCategoria" class="text-3xl font-bebas mb-4"></h2>
+    <div id="gridCategoria" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4"></div>
+  </div>
+
+  <script>
+    const API_KEY = "f91aff7a5c1524c5db2d8b5864747dd6";
+    const IMG_BASE = "https://image.tmdb.org/t/p/w300";
+
+    const categorias = {
+      "Acción": [
+        { id: 385687, url: "detalle.html?id=385687" },
+        { id: 299534, url: "detalle.html?id=299534" },
+        { id: 424785, url: "detalle.html?id=424785" },
+        { id: 667538, url: "detalle.html?id=667538" },
+        { id: 345887, url: "detalle.html?id=345887" },
+      ],
+      "Tendencias ahora": [
+        { id: 508943, url: "detalle.html?id=508943" },
+        { id: 399566, url: "detalle.html?id=399566" },
+        { id: 566525, url: "detalle.html?id=566525" },
+        { id: 550, url: "detalle.html?id=550" },
+        { id: 100402, url: "detalle.html?id=100402" },
+      ],
+      "Comedia": [
+        { id: 496243, url: "detalle.html?id=496243" },
+        { id: 512200, url: "detalle.html?id=512200" },
+        { id: 458576, url: "detalle.html?id=458576" },
+        { id: 447332, url: "detalle.html?id=447332" },
+        { id: 522681, url: "detalle.html?id=522681" },
+      ],
+      "Más Vistas": [
+        { id: 603692, url: "detalle.html?id=603692" },
+        { id: 787699, url: "detalle.html?id=787699" },
+        { id: 1072790, url: "detalle.html?id=1072790" },
+        { id: 1071215, url: "detalle.html?id=1071215" },
+        { id: 1078092, url: "detalle.html?id=1078092" },
+      ],
+      "Terror": [
+        { id: 420634, url: "detalle.html?id=420634" },
+        { id: 632357, url: "detalle.html?id=632357" },
+        { id: 381288, url: "detalle.html?id=381288" },
+        { id: 760161, url: "detalle.html?id=760161" },
+        { id: 539892, url: "detalle.html?id=539892" },
+      ]
+    };
+
+    const contenedor = document.getElementById("contenedorCarruseles");
+    const paginaCategoria = document.getElementById("paginaCategoria");
+    const gridCategoria = document.getElementById("gridCategoria");
+    const tituloCategoria = document.getElementById("tituloCategoria");
+
+    const rankingSecciones = ["Tendencias ahora", "Más Vistas"];
+
+    window.addEventListener("DOMContentLoaded", () => {
+      for (const [categoria, items] of Object.entries(categorias)) {
+        const esRanking = rankingSecciones.includes(categoria);
+        const seccionId = categoria.replace(/\s+/g, "");
+
+        const section = document.createElement("section");
+        section.innerHTML = `
+          <div class="flex justify-between items-center mb-3">
+            <h2 class="text-2xl font-bebas">${categoria}</h2>
+            <button onclick="verCategoria('${categoria}')" class="text-sm text-morado hover:underline">Ver más →</button>
+          </div>
+          <div class="overflow-x-auto scroll-smooth flex gap-4 pb-2" id="${seccionId}"></div>
+        `;
+        contenedor.appendChild(section);
+
+        const contenedorInterno = section.querySelector("div.overflow-x-auto");
+        items.forEach((item, index) => agregarContenido(item, contenedorInterno, esRanking ? index + 1 : null));
+      }
+
+      setTimeout(() => {
+        document.getElementById("loader").classList.add("hidden");
+        contenedor.classList.remove("hidden");
+      }, 2000); // simula carga
+    });
+
+    function agregarContenido(item, contenedor, numero = null) {
+      fetch(`https://api.themoviedb.org/3/movie/${item.id}?api_key=${API_KEY}`)
+        .then(res => res.ok ? res.json() : fetch(`https://api.themoviedb.org/3/tv/${item.id}?api_key=${API_KEY}`).then(r => r.json()))
+        .then(data => {
+          const div = document.createElement("div");
+          div.className = "relative w-[140px] h-[210px] flex-shrink-0 rounded overflow-hidden shadow-lg hover:scale-105 transition-all duration-300";
+
+          const imagen = data.poster_path
+            ? `<img src="${IMG_BASE + data.poster_path}" alt="${data.title || data.name}" class="w-full h-full object-cover rounded">`
+            : `<div class="bg-gray-800 w-full h-full flex items-center justify-center text-white text-center text-sm px-2">Imagen no disponible</div>`;
+
+          const numeroHtml = numero
+            ? `<div class="absolute top-1 left-1 bg-black text-white text-4xl font-black w-10 h-10 flex items-center justify-center rounded-lg border-2 border-white z-10">${numero}</div>`
+            : "";
+
+          div.innerHTML = `<a href="${item.url}" class="block relative">${numeroHtml}${imagen}</a>`;
+          contenedor.appendChild(div);
+        });
+    }
+
+    function verCategoria(nombre) {
+      const items = categorias[nombre];
+      document.getElementById("contenedorCarruseles").classList.add("hidden");
+      paginaCategoria.classList.remove("hidden");
+      tituloCategoria.textContent = nombre;
+      gridCategoria.innerHTML = "";
+
+      items.forEach(item => {
+        fetch(`https://api.themoviedb.org/3/movie/${item.id}?api_key=${API_KEY}`)
+          .then(res => res.ok ? res.json() : fetch(`https://api.themoviedb.org/3/tv/${item.id}?api_key=${API_KEY}`).then(r => r.json()))
+          .then(data => {
+            const div = document.createElement("div");
+            div.className = "relative w-full h-[260px] overflow-hidden rounded shadow-lg";
+
+            const img = data.poster_path
+              ? `<img src="${IMG_BASE + data.poster_path}" alt="${data.title || data.name}" class="w-full h-full object-cover rounded">`
+              : `<div class="bg-gray-800 w-full h-full flex items-center justify-center text-white text-sm">Imagen no disponible</div>`;
+
+            div.innerHTML = `<a href="${item.url}" class="block relative">${img}</a>`;
+            gridCategoria.appendChild(div);
+          });
+      });
+    }
+
+    function volverInicio() {
+      paginaCategoria.classList.add("hidden");
+      document.getElementById("contenedorCarruseles").classList.remove("hidden");
+    }
+  </script>
+</body>
+</html>
