@@ -3,71 +3,33 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Ajustes - Estilo Netflix</title>
+  <title>Ajustes - Zukiflix</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <!-- Lucide Icons -->
   <script src="https://unpkg.com/lucide@latest"></script>
   <style>
     .ajuste:hover {
-      background-color: rgba(147, 51, 234, 0.1);
+      background-color: rgba(126, 34, 206, 0.1);
       transform: scale(1.01);
     }
     .ajuste:active {
-      background-color: rgba(147, 51, 234, 0.2);
+      background-color: rgba(126, 34, 206, 0.2);
       transform: scale(0.99);
     }
-    .transition-all {
-      transition: all 0.3s ease;
-    }
-    .switch {
-      width: 40px;
-      height: 20px;
-      background: #4b5563;
-      border-radius: 9999px;
-      position: relative;
-      cursor: pointer;
-      transition: background 0.3s ease;
-    }
-    .switch::before {
-      content: "";
-      position: absolute;
-      width: 18px;
-      height: 18px;
-      background: white;
-      border-radius: 50%;
-      top: 1px;
-      left: 1px;
-      transition: transform 0.3s ease;
-    }
-    .switch.on {
-      background: #9333ea;
-    }
-    .switch.on::before {
-      transform: translateX(20px);
-    }
     .linea {
-      border-color: rgba(147, 51, 234, 0.3); /* Línea morada semitransparente */
+      border-color: rgba(90, 20, 160, 0.8);
     }
-    .spinner {
-      border: 4px solid rgba(255, 255, 255, 0.1);
-      border-top: 4px solid #9333ea;
-      border-radius: 50%;
-      width: 40px;
-      height: 40px;
-      animation: spin 1s linear infinite;
-    }
-    @keyframes spin {
-      to { transform: rotate(360deg); }
-    }
-    .alerta {
+    .alerta, .cargando {
       position: fixed;
       top: 50%;
       left: 50%;
       transform: translate(-50%, -50%);
       background: #111827;
-      border: 2px solid #9333ea;
-      border-radius: 12px;
-      padding: 20px;
+      border: 2px solid #6b21a8;
+      border-radius: 16px;
+      padding: 24px;
+      width: 90%;
+      max-width: 400px;
       color: #fff;
       text-align: center;
       z-index: 50;
@@ -77,23 +39,44 @@
       from { opacity: 0; transform: scale(0.8) translate(-50%, -50%); }
       to { opacity: 1; transform: scale(1) translate(-50%, -50%); }
     }
-    .alerta button {
-      background: #9333ea;
-      color: white;
-      padding: 8px 16px;
-      border-radius: 8px;
-      margin-top: 10px;
-      transition: background 0.3s;
+    .spinner {
+      border: 5px solid rgba(255, 255, 255, 0.1);
+      border-top: 5px solid #7e22ce;
+      border-radius: 50%;
+      width: 60px;
+      height: 60px;
+      animation: spin 1s linear infinite;
+      margin: 20px auto;
     }
-    .alerta button:hover {
-      background: #7e22ce;
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    .glow-button {
+      background: linear-gradient(90deg, #7e22ce, #9333ea, #7e22ce);
+      background-size: 200% 200%;
+      color: white;
+      border-radius: 12px;
+      padding: 10px 20px;
+      font-weight: 600;
+      box-shadow: 0 0 15px rgba(126, 34, 206, 0.7);
+      animation: glowing 3s linear infinite;
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    .glow-button:hover {
+      transform: scale(1.05);
+      box-shadow: 0 0 25px rgba(147, 51, 234, 0.9);
+    }
+    @keyframes glowing {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
     }
   </style>
 </head>
 <body class="bg-black text-white min-h-screen flex flex-col">
 
   <!-- Encabezado -->
-  <header class="flex items-center px-6 py-4 border-b border-purple-600/30">
+  <header class="flex items-center px-6 py-4 border-b border-purple-800/40">
     <h1 class="text-2xl font-bold flex items-center gap-2">
       <i data-lucide="settings" class="w-6 h-6"></i>
       Ajustes
@@ -102,121 +85,154 @@
 
   <!-- Contenido principal -->
   <main class="flex-1 overflow-y-auto px-6 py-4">
+
+    <!-- Perfil de usuario -->
+    <div id="perfilUsuario" class="flex flex-col items-center mb-6 hidden">
+      <img src="" alt="Foto de perfil" id="fotoPerfil" class="w-24 h-24 rounded-full border-4 border-purple-600 shadow-lg">
+      <h2 id="nombrePerfil" class="mt-3 text-xl font-semibold"></h2>
+      <p id="correoPerfil" class="mt-1 text-sm text-gray-400"></p>
+    </div>
+
+    <!-- Lista de ajustes -->
     <div class="divide-y linea">
 
-      <!-- Editar perfil -->
-      <div class="ajuste flex justify-between items-center py-4 px-2 rounded transition-all cursor-pointer" onclick="editarPerfil()">
-        <span class="text-lg">Editar perfil</span>
-        <i data-lucide="user-cog" class="w-5 h-5 text-gray-400"></i>
+      <!-- Iniciar sesión o Editar perfil -->
+      <div id="perfilOlogin" class="ajuste flex justify-between items-center py-4 px-2 rounded transition-all cursor-pointer" onclick="perfilOLogin()">
+        <span class="text-lg" id="perfilOloginText">Iniciar sesión</span>
+        <i data-lucide="log-in" id="perfilOloginIcon" class="w-5 h-5 text-gray-400"></i>
       </div>
 
       <!-- Versión -->
-      <div class="ajuste flex justify-between items-center py-4 px-2 rounded transition-all cursor-pointer" onclick="buscarActualizaciones()">
+      <div class="ajuste flex justify-between items-center py-4 px-2 rounded transition-all cursor-pointer" onclick="cargarVersion()">
         <span class="text-lg">Versión</span>
-        <span class="text-gray-400">1.0.5</span>
+        <i data-lucide="refresh-ccw" class="w-5 h-5 text-gray-400"></i>
       </div>
 
       <!-- Activar notificaciones -->
-      <div class="flex justify-between items-center py-4 px-2">
+      <div class="ajuste flex justify-between items-center py-4 px-2 rounded transition-all">
         <span class="text-lg">Activar notificaciones</span>
-        <div class="switch transition-all" onclick="this.classList.toggle('on')"></div>
+        <label class="inline-flex relative items-center cursor-pointer">
+          <input type="checkbox" id="notificaciones" class="sr-only peer" onchange="guardarEstado(this)">
+          <div class="w-11 h-6 bg-gray-600 rounded-full peer peer-checked:bg-purple-700 transition-all"></div>
+          <div class="absolute left-0.5 top-0.5 bg-white w-5 h-5 rounded-full peer-checked:translate-x-full transition-all"></div>
+        </label>
       </div>
 
       <!-- Quitar anuncios -->
-      <div class="flex justify-between items-center py-4 px-2">
+      <div class="flex justify-between items-center py-4">
         <span class="text-lg">Quitar anuncios</span>
-        <div class="switch transition-all" onclick="this.classList.toggle('on')"></div>
+        <button class="glow-button flex items-center gap-2" onclick="quitarAnuncios()">
+          <i data-lucide="zap"></i>
+          Activar
+        </button>
       </div>
 
-      <!-- Pedidos -->
-      <div class="ajuste flex justify-between items-center py-4 px-2 rounded transition-all cursor-pointer" onclick="alert('Pedidos abiertos')">
-        <span class="text-lg">Pedidos</span>
-        <i data-lucide="shopping-cart" class="w-5 h-5 text-gray-400"></i>
+      <!-- Más opciones -->
+      <div class="ajuste flex justify-between items-center py-4 px-2 rounded transition-all cursor-pointer" onclick="redirigir('soporte.html')">
+        <span class="text-lg">Soporte</span>
+        <i data-lucide="life-buoy" class="w-5 h-5 text-gray-400"></i>
+      </div>
+      <div class="ajuste flex justify-between items-center py-4 px-2 rounded transition-all cursor-pointer" onclick="redirigir('comentarios.html')">
+        <span class="text-lg">Enviar comentarios</span>
+        <i data-lucide="message-circle" class="w-5 h-5 text-gray-400"></i>
+      </div>
+      <div class="ajuste flex justify-between items-center py-4 px-2 rounded transition-all cursor-pointer" onclick="redirigir('problema.html')">
+        <span class="text-lg">Reportar un problema</span>
+        <i data-lucide="alert-circle" class="w-5 h-5 text-gray-400"></i>
+      </div>
+      <div class="ajuste flex justify-between items-center py-4 px-2 rounded transition-all cursor-pointer" onclick="redirigir('faq.html')">
+        <span class="text-lg">Preguntas frecuentes (FAQ)</span>
+        <i data-lucide="help-circle" class="w-5 h-5 text-gray-400"></i>
+      </div>
+      <div class="ajuste flex justify-between items-center py-4 px-2 rounded transition-all cursor-pointer" onclick="redirigir('acerca.html')">
+        <span class="text-lg">Acerca de la app</span>
+        <i data-lucide="info" class="w-5 h-5 text-gray-400"></i>
+      </div>
+      <div class="ajuste flex justify-between items-center py-4 px-2 rounded transition-all cursor-pointer" onclick="redirigir('compartir.html')">
+        <span class="text-lg">Compartir la app</span>
+        <i data-lucide="share" class="w-5 h-5 text-gray-400"></i>
       </div>
 
-      <!-- Compartir -->
-      <div class="ajuste flex justify-between items-center py-4 px-2 rounded transition-all cursor-pointer" onclick="compartir()">
-        <span class="text-lg">Compartir</span>
-        <i data-lucide="share-2" class="w-5 h-5 text-gray-400"></i>
-      </div>
-
-      <!-- Login / Logout -->
-      <div class="ajuste flex justify-between items-center py-4 px-2 rounded transition-all cursor-pointer" onclick="toggleLogin()">
-        <span id="login-text" class="text-lg text-red-500">Login</span>
-        <i id="login-icon" data-lucide="log-in" class="w-5 h-5 text-red-500"></i>
+      <!-- Salir -->
+      <div class="ajuste flex justify-between items-center py-4 px-2 rounded transition-all cursor-pointer" onclick="cerrarApp()">
+        <span class="text-lg text-red-500">Salir de la app</span>
+        <i data-lucide="log-out" class="w-5 h-5 text-red-500"></i>
       </div>
     </div>
   </main>
 
-  <!-- Pie de página -->
-  <footer class="text-center text-gray-500 text-sm py-4 border-t border-purple-600/30">
-    <i data-lucide="info" class="inline w-4 h-4"></i> Mateo Music HM
-  </footer>
-
-  <!-- Contenedor alerta -->
-  <div id="alerta" class="hidden"></div>
-
-  <!-- Scripts -->
   <script>
     lucide.createIcons();
 
-    function compartir() {
-      navigator.clipboard.writeText(window.location.href).then(() => {
-        mostrarAlerta("✅ Enlace copiado al portapapeles.");
-      }).catch(() => {
-        mostrarAlerta("❌ No se pudo copiar el enlace.");
-      });
+    function guardarEstado(el) {
+      localStorage.setItem(el.id, el.checked);
     }
 
-    function editarPerfil() {
-      mostrarAlerta("🔧 Abrir editor de perfil...");
-    }
-
-    function toggleLogin() {
-      const text = document.getElementById("login-text");
-      const icon = document.getElementById("login-icon");
-      if (text.innerText === "Login") {
-        text.innerText = "Logout";
-        text.classList.remove("text-red-500");
-        icon.setAttribute("data-lucide", "log-out");
-        text.classList.add("text-green-400");
-      } else {
-        text.innerText = "Login";
-        text.classList.remove("text-green-400");
-        icon.setAttribute("data-lucide", "log-in");
-        text.classList.add("text-red-500");
-      }
+    function cargarVersion() {
+      const alerta = document.createElement("div");
+      alerta.classList.add("alerta");
+      alerta.innerHTML = `
+        <div class="flex items-center justify-center gap-2 text-purple-400">
+          <i data-lucide="check-circle" class="w-6 h-6"></i>
+          <p class="text-lg">Tu app Zukiflix está actualizada</p>
+        </div>
+        <button onclick="this.parentElement.remove()" class="glow-button mt-4">Aceptar</button>`;
+      document.body.appendChild(alerta);
       lucide.createIcons();
     }
 
-    function buscarActualizaciones() {
-      const alerta = document.getElementById("alerta");
-      alerta.innerHTML = `<div class="alerta">
-        <div class="spinner mx-auto mb-4"></div>
-        <p>Buscando actualizaciones...</p>
-      </div>`;
-      alerta.classList.remove("hidden");
+    function quitarAnuncios() {
+      const alerta = document.createElement("div");
+      alerta.classList.add("alerta");
+      alerta.innerHTML = `
+        <div class="flex items-center justify-center gap-2 text-purple-400">
+          <i data-lucide="credit-card" class="w-6 h-6"></i>
+          <p class="text-lg">Para quitar los anuncios debes realizar el pago.</p>
+        </div>
+        <button onclick="redirigir('pago.html')" class="glow-button mt-4">Aceptar</button>
+        <button onclick="this.parentElement.remove()" class="mt-4 bg-gray-700 px-4 py-2 rounded">Cancelar</button>`;
+      document.body.appendChild(alerta);
+      lucide.createIcons();
+    }
+
+    function perfilOLogin() {
+      const logeado = localStorage.getItem("logeado");
+      if (logeado === "true") {
+        window.location.href = "go:PERFIL";
+      } else {
+        window.location.href = "go:LOGIN";
+      }
+    }
+
+    function cerrarApp() {
+      const cargando = document.createElement("div");
+      cargando.classList.add("cargando");
+      cargando.innerHTML = `
+        <p>Saliendo de la app...</p>
+        <div class="spinner"></div>`;
+      document.body.appendChild(cargando);
       setTimeout(() => {
-        alerta.innerHTML = `<div class="alerta">
-          <p class="text-lg font-bold mb-2">✅ ¡Estás actualizado!</p>
-          <p class="text-sm text-gray-400 mb-4">Tienes la última versión instalada.</p>
-          <button onclick="cerrarAlerta()">Aceptar</button>
-        </div>`;
+        window.location.href = "salir.html";
       }, 2000);
     }
 
-    function mostrarAlerta(mensaje) {
-      const alerta = document.getElementById("alerta");
-      alerta.innerHTML = `<div class="alerta">
-        <p class="text-lg">${mensaje}</p>
-        <button onclick="cerrarAlerta()">Aceptar</button>
-      </div>`;
-      alerta.classList.remove("hidden");
-    }
-
-    function cerrarAlerta() {
-      document.getElementById("alerta").classList.add("hidden");
+    // Cargar datos al abrir
+    window.onload = () => {
+      const notificaciones = document.getElementById("notificaciones");
+      if (localStorage.getItem("notificaciones") === "true") {
+        notificaciones.checked = true;
+      }
+      const logeado = localStorage.getItem("logeado");
+      if (logeado === "true") {
+        document.getElementById("perfilUsuario").classList.remove("hidden");
+        document.getElementById("fotoPerfil").src = localStorage.getItem("fotoPerfil") || "https://via.placeholder.com/150";
+        document.getElementById("nombrePerfil").innerText = localStorage.getItem("nombrePerfil") || "Usuario";
+        document.getElementById("correoPerfil").innerText = localStorage.getItem("correoPerfil") || "correo@zukiflix.com";
+        document.getElementById("perfilOloginText").innerText = "Editar perfil";
+        document.getElementById("perfilOloginIcon").setAttribute("data-lucide", "user");
+      }
+      lucide.createIcons();
     }
   </script>
 </body>
-  </html>
+</html>
