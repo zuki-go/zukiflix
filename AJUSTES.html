@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Ajustes - Estilo Netflix</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <style>
+    .ajuste:hover {
+      background-color: rgba(147, 51, 234, 0.1);
+      transform: scale(1.01);
+    }
+    .ajuste:active {
+      background-color: rgba(147, 51, 234, 0.2);
+      transform: scale(0.99);
+    }
+    .transition-all {
+      transition: all 0.3s ease;
+    }
+    .switch {
+      width: 40px;
+      height: 20px;
+      background: #4b5563;
+      border-radius: 9999px;
+      position: relative;
+      cursor: pointer;
+      transition: background 0.3s ease;
+    }
+    .switch::before {
+      content: "";
+      position: absolute;
+      width: 18px;
+      height: 18px;
+      background: white;
+      border-radius: 50%;
+      top: 1px;
+      left: 1px;
+      transition: transform 0.3s ease;
+    }
+    .switch.on {
+      background: #9333ea;
+    }
+    .switch.on::before {
+      transform: translateX(20px);
+    }
+    .linea {
+      border-color: rgba(147, 51, 234, 0.3); /* Línea morada semitransparente */
+    }
+    .spinner {
+      border: 4px solid rgba(255, 255, 255, 0.1);
+      border-top: 4px solid #9333ea;
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      animation: spin 1s linear infinite;
+    }
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    .alerta {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: #111827;
+      border: 2px solid #9333ea;
+      border-radius: 12px;
+      padding: 20px;
+      color: #fff;
+      text-align: center;
+      z-index: 50;
+      animation: popup 0.4s ease;
+    }
+    @keyframes popup {
+      from { opacity: 0; transform: scale(0.8) translate(-50%, -50%); }
+      to { opacity: 1; transform: scale(1) translate(-50%, -50%); }
+    }
+    .alerta button {
+      background: #9333ea;
+      color: white;
+      padding: 8px 16px;
+      border-radius: 8px;
+      margin-top: 10px;
+      transition: background 0.3s;
+    }
+    .alerta button:hover {
+      background: #7e22ce;
+    }
+  </style>
+</head>
+<body class="bg-black text-white min-h-screen flex flex-col">
+
+  <!-- Encabezado -->
+  <header class="flex items-center px-6 py-4 border-b border-purple-600/30">
+    <h1 class="text-2xl font-bold flex items-center gap-2">
+      <i data-lucide="settings" class="w-6 h-6"></i>
+      Ajustes
+    </h1>
+  </header>
+
+  <!-- Contenido principal -->
+  <main class="flex-1 overflow-y-auto px-6 py-4">
+    <div class="divide-y linea">
+
+      <!-- Editar perfil -->
+      <div class="ajuste flex justify-between items-center py-4 px-2 rounded transition-all cursor-pointer" onclick="editarPerfil()">
+        <span class="text-lg">Editar perfil</span>
+        <i data-lucide="user-cog" class="w-5 h-5 text-gray-400"></i>
+      </div>
+
+      <!-- Versión -->
+      <div class="ajuste flex justify-between items-center py-4 px-2 rounded transition-all cursor-pointer" onclick="buscarActualizaciones()">
+        <span class="text-lg">Versión</span>
+        <span class="text-gray-400">1.0.5</span>
+      </div>
+
+      <!-- Activar notificaciones -->
+      <div class="flex justify-between items-center py-4 px-2">
+        <span class="text-lg">Activar notificaciones</span>
+        <div class="switch transition-all" onclick="this.classList.toggle('on')"></div>
+      </div>
+
+      <!-- Quitar anuncios -->
+      <div class="flex justify-between items-center py-4 px-2">
+        <span class="text-lg">Quitar anuncios</span>
+        <div class="switch transition-all" onclick="this.classList.toggle('on')"></div>
+      </div>
+
+      <!-- Pedidos -->
+      <div class="ajuste flex justify-between items-center py-4 px-2 rounded transition-all cursor-pointer" onclick="alert('Pedidos abiertos')">
+        <span class="text-lg">Pedidos</span>
+        <i data-lucide="shopping-cart" class="w-5 h-5 text-gray-400"></i>
+      </div>
+
+      <!-- Compartir -->
+      <div class="ajuste flex justify-between items-center py-4 px-2 rounded transition-all cursor-pointer" onclick="compartir()">
+        <span class="text-lg">Compartir</span>
+        <i data-lucide="share-2" class="w-5 h-5 text-gray-400"></i>
+      </div>
+
+      <!-- Login / Logout -->
+      <div class="ajuste flex justify-between items-center py-4 px-2 rounded transition-all cursor-pointer" onclick="toggleLogin()">
+        <span id="login-text" class="text-lg text-red-500">Login</span>
+        <i id="login-icon" data-lucide="log-in" class="w-5 h-5 text-red-500"></i>
+      </div>
+    </div>
+  </main>
+
+  <!-- Pie de página -->
+  <footer class="text-center text-gray-500 text-sm py-4 border-t border-purple-600/30">
+    <i data-lucide="info" class="inline w-4 h-4"></i> Mateo Music HM
+  </footer>
+
+  <!-- Contenedor alerta -->
+  <div id="alerta" class="hidden"></div>
+
+  <!-- Scripts -->
+  <script>
+    lucide.createIcons();
+
+    function compartir() {
+      navigator.clipboard.writeText(window.location.href).then(() => {
+        mostrarAlerta("✅ Enlace copiado al portapapeles.");
+      }).catch(() => {
+        mostrarAlerta("❌ No se pudo copiar el enlace.");
+      });
+    }
+
+    function editarPerfil() {
+      mostrarAlerta("🔧 Abrir editor de perfil...");
+    }
+
+    function toggleLogin() {
+      const text = document.getElementById("login-text");
+      const icon = document.getElementById("login-icon");
+      if (text.innerText === "Login") {
+        text.innerText = "Logout";
+        text.classList.remove("text-red-500");
+        icon.setAttribute("data-lucide", "log-out");
+        text.classList.add("text-green-400");
+      } else {
+        text.innerText = "Login";
+        text.classList.remove("text-green-400");
+        icon.setAttribute("data-lucide", "log-in");
+        text.classList.add("text-red-500");
+      }
+      lucide.createIcons();
+    }
+
+    function buscarActualizaciones() {
+      const alerta = document.getElementById("alerta");
+      alerta.innerHTML = `<div class="alerta">
+        <div class="spinner mx-auto mb-4"></div>
+        <p>Buscando actualizaciones...</p>
+      </div>`;
+      alerta.classList.remove("hidden");
+      setTimeout(() => {
+        alerta.innerHTML = `<div class="alerta">
+          <p class="text-lg font-bold mb-2">✅ ¡Estás actualizado!</p>
+          <p class="text-sm text-gray-400 mb-4">Tienes la última versión instalada.</p>
+          <button onclick="cerrarAlerta()">Aceptar</button>
+        </div>`;
+      }, 2000);
+    }
+
+    function mostrarAlerta(mensaje) {
+      const alerta = document.getElementById("alerta");
+      alerta.innerHTML = `<div class="alerta">
+        <p class="text-lg">${mensaje}</p>
+        <button onclick="cerrarAlerta()">Aceptar</button>
+      </div>`;
+      alerta.classList.remove("hidden");
+    }
+
+    function cerrarAlerta() {
+      document.getElementById("alerta").classList.add("hidden");
+    }
+  </script>
+</body>
+  </html>
