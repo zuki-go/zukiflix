@@ -74,14 +74,167 @@
   </style>
 </head>
 <body class="bg-black text-white min-h-screen flex flex-col">
-
-  <!-- Encabezado -->
+      <!-- Encabezado -->
   <header class="flex items-center px-6 py-4 border-b border-purple-800/40">
     <h1 class="text-2xl font-bold flex items-center gap-2">
       <i data-lucide="settings" class="w-6 h-6"></i>
       Ajustes
     </h1>
   </header>
+<div class="relative mb-4 ml-6 w-max" style="margin-top: 40px;">
+  <img id="profilePic" 
+       src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSDOXgpPjLUdVfK8u6NdN7QknDxpNOEAkczmjt0Afu7A7jO7qPPi7tmWnI&s=10" 
+       class="rounded-full w-24 h-24 object-cover border-4 border-purple-400" 
+       alt="Perfil"/>
+  <div id="cameraIcon" 
+       class="absolute bg-purple-600 rounded-full cursor-pointer shadow-lg" 
+       style="bottom: -6px; right: -6px; border: 2px solid white; padding: 4px;">
+    <i data-lucide="camera" class="text-white" style="width: 16px; height: 16px;"></i>
+  </div>
+  <input type="file" id="fileInput" accept="image/*" class="hidden" />
+</div>
+
+
+
+<div class="text-left ml-6">
+  <h2 id="userName" class="text-xl font-bold">Usuario</h2>
+  <p id="userEmail" class="text-sm text-gray-300">correo@ejemplo.com</p>
+</div>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
+  import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js";
+  import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-storage.js";
+
+  // Firebase config
+  const firebaseConfig = {
+    apiKey: "AIzaSyDriO1CsL6DAfSkFXIr3NPtENnyNtwphuI",
+    authDomain: "loginflix-63abe.firebaseapp.com",
+    projectId: "loginflix-63abe",
+    storageBucket: "loginflix-63abe.appspot.com",
+    messagingSenderId: "914192610747",
+    appId: "1:914192610747:web:e3d10e22a563a9a44a009e"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth();
+  const storage = getStorage();
+
+  // IndexedDB Helpers
+  function openDB() {
+    return new Promise((resolve, reject) => {
+      const request = indexedDB.open('ProfilePicsDB', 1);
+      request.onerror = () => reject('No se pudo abrir DB');
+      request.onsuccess = () => resolve(request.result);
+      request.onupgradeneeded = e => {
+        const db = e.target.result;
+        if (!db.objectStoreNames.contains('images')) {
+          db.createObjectStore('images');
+        }
+      };
+    });
+  }
+
+  async function saveImageToDB(key, blob) {
+    const db = await openDB();
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction('images', 'readwrite');
+      const store = tx.objectStore('images');
+      const req = store.put(blob, key);
+      req.onsuccess = () => resolve();
+      req.onerror = () => reject('Error guardando imagen');
+    });
+  }
+
+  async function getImageFromDB(key) {
+    const db = await openDB();
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction('images', 'readonly');
+      const store = tx.objectStore('images');
+      const req = store.get(key);
+      req.onsuccess = () => resolve(req.result);
+      req.onerror = () => reject('Error obteniendo imagen');
+    });
+  }
+
+  // Carga imagen desde IndexedDB y la muestra
+  async function loadProfilePicIndexedDB(uid) {
+    try {
+      const blob = await getImageFromDB(profilePic-${uid});
+      if (blob) {
+        const url = URL.createObjectURL(blob);
+        document.getElementById('profilePic').src = url;
+        console.log('Imagen cargada desde IndexedDB');
+      }
+    } catch (e) {
+      console.warn('No se pudo cargar imagen de IndexedDB:', e);
+    }
+  }
+
+  // Cuando cambia el estado de autenticación
+  onAuthStateChanged(auth, async (user) => {
+    if (user) {
+      document.getElementById('userEmail').innerText = user.email;
+      document.getElementById('userName').innerText = user.displayName || "Usuario";
+
+      // Intentar cargar imagen guardada
+      await loadProfilePicIndexedDB(user.uid);
+
+    } else {
+      document.getElementById('userEmail').innerText = "No autenticado";
+      document.getElementById('userName').innerText = "Invitado";
+      document.getElementById('profilePic').src = "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSDOXgpPjLUdVfK8u6NdN7QknDxpNOEAkczmjt0Afu7A7jO7qPPi7tmWnI&s=10";
+    }
+  });
+
+  // Al hacer clic en el icono, abrir selector
+  document.getElementById('cameraIcon').addEventListener('click', () => {
+    document.getElementById('fileInput').click();
+  });
+
+  // Cuando el usuario selecciona archivo
+  document.getElementById('fileInput').addEventListener('change', async (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const user = auth.currentUser;
+    if (!user) {
+      alert("Debes iniciar sesión primero.");
+      return;
+    }
+
+    try {
+      // Mostrar imagen localmente usando URL.createObjectURL para feedback inmediato
+      const localUrl = URL.createObjectURL(file);
+      document.getElementById('profilePic').src = localUrl;
+
+      // Guardar en IndexedDB
+      await saveImageToDB(profilePic-${user.uid}, file);
+
+      // Subir imagen a Firebase Storage
+      const storageRef = ref(storage, profilePics/${user.uid});
+      await uploadBytes(storageRef, file);
+      const firebaseUrl = await getDownloadURL(storageRef);
+
+      console.log('Imagen subida a Firebase:', firebaseUrl);
+
+      // Opcional: puedes actualizar la imagen con la URL Firebase después de subir
+      // document.getElementById('profilePic').src = firebaseUrl;
+
+      event.target.value = ''; // limpiar para que puedas subir la misma imagen si quieres
+
+    } catch (error) {
+      alert("Error al subir o guardar la imagen: " + error.message);
+      console.error(error);
+    }
+  });
+
+  window.addEventListener('load', () => {
+    lucide.createIcons();
+  });
+</script>
+
+  
 
   <!-- Contenido principal -->
   <main class="flex-1 overflow-y-auto px-6 py-4">
@@ -160,6 +313,18 @@
       </div>
     </div>
   </main>
+  <!-- Footer legal ZUKIFLIX -->
+<footer class="mt-auto text-sm text-gray-400 bg-black/80 py-6 px-4 border-t border-purple-800/40">
+  <div class="flex flex-col md:flex-row items-center justify-center gap-4 text-center">
+    <a href="go:PP" class="hover:text-purple-400 transition">Política de Privacidad</a>
+    <span class="hidden md:inline">|</span>
+    <a href="go:TC" class="hover:text-purple-400 transition">Términos y Condiciones</a>
+    <span class="hidden md:inline">|</span>
+    <a href="go:AC" class="hover:text-purple-400 transition">Aviso de Cookies</a>
+  </div>
+  <p class="text-center mt-4">&copy; ZUKIFLIX 2025. Todos los derechos reservados.</p>
+</footer>
+
 
   <script>
     lucide.createIcons();
