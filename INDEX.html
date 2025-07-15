@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Contenido TMDB</title>
+  <title>Contenido TMDB - Sin Animes</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
     .scrolling-wrapper {
@@ -45,9 +45,9 @@
 const apiKey = 'f91aff7a5c1524c5db2d8b5864747dd6';
 
 const destacados = [
-  { id: 502356 }, // Ejemplo de película o serie
-  { id: 872585 },
-  { id: 995133 },
+  { id: 1011477 },
+  { id: 1234821 },
+  { id: 236994 },
   { id: 114410 }
 ];
 
@@ -55,17 +55,17 @@ const secciones = [
   {
     titulo: 'Populares',
     id: 'seccion1',
-    items: [39323, 114410, 820232, 872585]
+    items: [1234821, 1061474, 552524, 85937]
   },
   {
     titulo: 'Tendencias',
     id: 'seccion2',
-    items: [210233, 399566, 157368, 572802]
+    items: [1087192, 93405, 157368, 85937]
   },
   {
     titulo: 'Nuevos Lanzamientos',
     id: 'seccion3',
-    items: [76600, 995133, 1083862, 20352]
+    items: [85937, 279060, 1083862, 93405]
   },
   {
     titulo: 'Clásicos Recomendados',
@@ -75,7 +75,7 @@ const secciones = [
   {
     titulo: 'Especiales TMDB',
     id: 'seccion5',
-    items: [346698, 693134, 1124701, 22803]
+    items: [346698, 85937, 1124701, 22803]
   }
 ];
 
@@ -88,20 +88,25 @@ async function cargarSlider() {
     let res = await fetch(`https://api.themoviedb.org/3/movie/${item.id}?api_key=${apiKey}&language=es-ES`);
     let data = await res.json();
 
-    if (data.success === false || data.status_code) {
+    if (!data || data.success === false || data.status_code || data.genres?.some(g => g.id === 16)) {
+      // Si es anime o error, intenta con TV
       res = await fetch(`https://api.themoviedb.org/3/tv/${item.id}?api_key=${apiKey}&language=es-ES`);
       data = await res.json();
       type = 'tv';
     }
 
-    sliderData.push({ ...data, id: item.id, type });
+    if (!data.genres?.some(g => g.id === 16)) {
+      sliderData.push({ ...data, id: item.id, type });
+    }
   }
 
-  mostrarSlide();
-  setInterval(() => {
-    sliderIndex = (sliderIndex + 1) % sliderData.length;
+  if (sliderData.length > 0) {
     mostrarSlide();
-  }, 5000);
+    setInterval(() => {
+      sliderIndex = (sliderIndex + 1) % sliderData.length;
+      mostrarSlide();
+    }, 5000);
+  }
 }
 
 function mostrarSlide() {
@@ -112,7 +117,7 @@ function mostrarSlide() {
   const fondo = imagen ? `https://image.tmdb.org/t/p/w780${imagen}` : "";
 
   contenedor.innerHTML = `
-    <div onclick="window.location.href='go:${item.id}'"
+    <div onclick="window.location.href='detalle.html?id=${item.id}'"
          class="slider-banner relative flex items-end p-4 cursor-pointer"
          style="background-image: url('${fondo}')">
       <div class="bg-gradient-to-t from-black/80 to-transparent absolute inset-0 rounded-xl"></div>
@@ -129,14 +134,17 @@ function renderItem(data, type, id) {
   const item = document.createElement('div');
   item.className = 'scrolling-item';
   item.onclick = () => {
-    window.location.href = `go:${id}`;
+    window.location.href = `detalle.html?id=${id}`;
   };
 
   const poster = data.poster_path
     ? `https://image.tmdb.org/t/p/w300${data.poster_path}`
     : 'https://via.placeholder.com/140x200?text=Sin+imagen';
 
-  const tipoEtiqueta = type === 'tv' ? 'Serie' : 'Película';
+  const tipoEtiqueta = `
+    <span class="absolute top-1 right-1 bg-green-400 text-black px-2 text-xs rounded">
+      ${type === 'tv' ? 'Serie' : 'Película'}
+    </span>`;
 
   item.innerHTML = `
     <div class="relative transition-transform duration-200 ease-in-out active:scale-95 hover:scale-100">
@@ -144,7 +152,7 @@ function renderItem(data, type, id) {
       <span class="absolute top-1 left-1 bg-black bg-opacity-70 px-2 text-xs rounded">
         ${(data.release_date || data.first_air_date || '').slice(0, 4)}
       </span>
-      <span class="absolute top-1 right-1 bg-green-400 text-black px-2 text-xs rounded">${tipoEtiqueta}</span>
+      ${tipoEtiqueta}
     </div>
     <p class="mt-2 text-sm truncate text-center">${data.title || data.name}</p>
   `;
@@ -156,19 +164,20 @@ async function cargarContenidoSeccion(seccion) {
   const contenedor = document.getElementById(seccion.id);
   for (const id of seccion.items) {
     let type = 'movie';
-
     try {
       let res = await fetch(`https://api.themoviedb.org/3/movie/${id}?api_key=${apiKey}&language=es-ES`);
       let data = await res.json();
 
-      if (data.success === false || data.status_code) {
+      if (!data || data.success === false || data.status_code || data.genres?.some(g => g.id === 16)) {
         res = await fetch(`https://api.themoviedb.org/3/tv/${id}?api_key=${apiKey}&language=es-ES`);
         data = await res.json();
         type = 'tv';
       }
 
-      const card = renderItem(data, type, id);
-      contenedor.appendChild(card);
+      if (!data.genres?.some(g => g.id === 16)) {
+        const card = renderItem(data, type, id);
+        contenedor.appendChild(card);
+      }
     } catch (error) {
       console.error("Error al cargar", id);
     }
@@ -197,4 +206,4 @@ document.addEventListener("DOMContentLoaded", () => {
 </script>
 
 </body>
-  </html
+</html>
