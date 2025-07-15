@@ -81,6 +81,29 @@
       Ajustes
     </h1>
   </header>
+<!-- Botón hamburguesa -->
+<button id="menuToggle" class="fixed top-4 right-4 z-50 text-white sm:hidden">
+  <i data-lucide="menu" class="w-6 h-6"></i>
+</button>
+
+<!-- Menú hamburguesa lateral derecho -->
+<div id="mobileMenu" class="hidden fixed top-0 right-0 h-full w-64 bg-gray-900 text-white p-5 z-40 shadow-lg transition-all">
+  <nav class="flex flex-col gap-4">
+    <a href="#" class="flex items-center gap-2 hover:text-purple-400"><i data-lucide="shield-check"></i> Política de Privacidad</a>
+    <a href="#" class="flex items-center gap-2 hover:text-purple-400"><i data-lucide="file-text"></i> Términos de Uso</a>
+    <a href="#" class="flex items-center gap-2 hover:text-purple-400"><i data-lucide="alert-triangle"></i> Aviso Legal</a>
+    <a href="#" class="flex items-center gap-2 hover:text-purple-400"><i data-lucide="mail"></i> Contacto</a>
+    <a href="#" class="flex items-center gap-2 hover:text-purple-400"><i data-lucide="help-circle"></i> Preguntas Frecuentes</a>
+    <a href="#" class="flex items-center gap-2 hover:text-purple-400"><i data-lucide="users"></i> Nosotros</a>
+    <a href="#" class="flex items-center gap-2 hover:text-purple-400"><i data-lucide="flag"></i> Reportar</a>
+    <a href="#" class="flex items-center gap-2 hover:text-purple-400"><i data-lucide="copyright"></i> Autor</a>
+    <a href="#" class="flex items-center gap-2 hover:text-purple-400"><i data-lucide="settings"></i> Opciones</a>
+  </nav>
+  <div class="mt-6 text-center text-xs text-gray-400 border-t pt-3 border-gray-700">
+    © 2025 TuAppAnime. Todos los derechos reservados.
+  </div>
+</div>
+
 <div class="relative mb-4 ml-6 w-max" style="margin-top: 40px;">
   <img id="profilePic" 
        src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSDOXgpPjLUdVfK8u6NdN7QknDxpNOEAkczmjt0Afu7A7jO7qPPi7tmWnI&s=10" 
@@ -102,6 +125,20 @@
 </div>
 
 <script type="module">
+  // Cargar íconos de Lucide y funcionalidad del menú
+  window.addEventListener('load', () => {
+    if (typeof lucide !== "undefined") lucide.createIcons();
+
+    const toggle = document.getElementById("menuToggle");
+    const menu = document.getElementById("mobileMenu");
+
+    toggle.addEventListener("click", () => {
+      menu.classList.toggle("hidden");
+      if (typeof lucide !== "undefined") lucide.createIcons();
+    });
+  });
+
+
   import { initializeApp } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
   import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js";
   import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-storage.js";
@@ -160,7 +197,7 @@
   // Carga imagen desde IndexedDB y la muestra
   async function loadProfilePicIndexedDB(uid) {
     try {
-      const blob = await getImageFromDB(profilePic-${uid});
+      const blob = await getImageFromDB(`profilePic-${uid}`);
       if (blob) {
         const url = URL.createObjectURL(blob);
         document.getElementById('profilePic').src = url;
@@ -209,10 +246,10 @@
       document.getElementById('profilePic').src = localUrl;
 
       // Guardar en IndexedDB
-      await saveImageToDB(profilePic-${user.uid}, file);
+      await saveImageToDB(`profilePic-${user.uid}`, file);
 
       // Subir imagen a Firebase Storage
-      const storageRef = ref(storage, profilePics/${user.uid});
+      const storageRef = ref(storage, `profilePics/${user.uid}`);
       await uploadBytes(storageRef, file);
       const firebaseUrl = await getDownloadURL(storageRef);
 
@@ -301,7 +338,7 @@
         <span class="text-lg">Acerca de la app</span>
         <i data-lucide="info" class="w-5 h-5 text-gray-400"></i>
       </div>
-      <div class="ajuste flex justify-between items-center py-4 px-2 rounded transition-all cursor-pointer" onclick="redirigir('http://action_share')">
+      <div class="ajuste flex justify-between items-center py-4 px-2 rounded transition-all cursor-pointer" onclick="redirigir('compartir.html')">
         <span class="text-lg">Compartir la app</span>
         <i data-lucide="share" class="w-5 h-5 text-gray-400"></i>
       </div>
@@ -312,19 +349,8 @@
         <i data-lucide="log-out" class="w-5 h-5 text-red-500"></i>
       </div>
     </div>
-  </main>
-  <!-- Footer legal ZUKIFLIX -->
-<footer class="mt-auto text-sm text-gray-400 bg-black/80 py-6 px-4 border-t border-purple-800/40">
-  <div class="flex flex-col md:flex-row items-center justify-center gap-4 text-center">
-    <a href="go:PP" class="hover:text-purple-400 transition">Política de Privacidad</a>
-    <span class="hidden md:inline">|</span>
-    <a href="go:TC" class="hover:text-purple-400 transition">Términos y Condiciones</a>
-    <span class="hidden md:inline">|</span>
-    <a href="go:AC" class="hover:text-purple-400 transition">Aviso de Cookies</a>
-  </div>
-  <p class="text-center mt-4">&copy; ZUKIFLIX 2025. Todos los derechos reservados.</p>
-</footer>
 
+  </main>
 
   <script>
     lucide.createIcons();
@@ -354,7 +380,7 @@
           <i data-lucide="credit-card" class="w-6 h-6"></i>
           <p class="text-lg">Para quitar los anuncios debes realizar el pago.</p>
         </div>
-        <button onclick="redirigir('http://action_noads')" class="glow-button mt-4">Aceptar</button>
+        <button onclick="redirigir('pago.html')" class="glow-button mt-4">Aceptar</button>
         <button onclick="this.parentElement.remove()" class="mt-4 bg-gray-700 px-4 py-2 rounded">Cancelar</button>`;
       document.body.appendChild(alerta);
       lucide.createIcons();
@@ -377,7 +403,7 @@
         <div class="spinner"></div>`;
       document.body.appendChild(cargando);
       setTimeout(() => {
-        window.location.href = "http://action_exit";
+        window.location.href = "salir.html";
       }, 2000);
     }
 
