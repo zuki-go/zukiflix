@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Catálogo - Películas y Series</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    .fixed-image { width: 120px; height: 170px; object-fit: cover; }
+    .card-3d {
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+      box-shadow: 0 6px 15px rgba(128, 90, 213, 0.3);
+      background-color: #1f1f1f;
+    }
+    .card-3d:hover {
+      transform: translateY(-6px) scale(1.03);
+      box-shadow: 0 12px 25px rgba(168, 85, 247, 0.5);
+    }
+    .label-tag {
+      background-color: rgba(168, 85, 247, 0.85);
+    }
+    .sticky-search {
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      background-color: #000;
+      padding-top: 1rem;
+      padding-bottom: 1rem;
+    }
+    .skeleton {
+      width: 120px;
+      height: 170px;
+      background: linear-gradient(90deg, #333 25%, #444 50%, #333 75%);
+      background-size: 200% 100%;
+      animation: shimmer 1.5s infinite;
+    }
+    @keyframes shimmer {
+      0% { background-position: -200% 0; }
+      100% { background-position: 200% 0; }
+    }
+  </style>
+</head>
+<body class="bg-black text-white font-sans">
+
+  <div class="sticky-search px-4">
+    <input
+      id="buscador"
+      type="text"
+      placeholder="Buscar por nombre, 'película' o 'serie'..."
+      class="w-full p-3 bg-gray-800 text-white border border-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-600"
+    />
+  </div>
+
+  <div id="contenedor" class="px-4 py-6 flex flex-wrap gap-5 justify-center"></div>
+
+  <script>
+    const apiKey = 'f91aff7a5c1524c5db2d8b5864747dd6';
+
+    // Incluye cualquier ID que quieras, en el generador se encuentra todo
+    const items = [
+      66732, 93484, 1399, 105971, 214756, 872585, 92749,
+      11324, 124905, 508943, 354912, 27205, 414906, 121,
+      324857, 438631, 114410, 210233, 76600, 1011477
+    ];
+
+    const contenedor = document.getElementById('contenedor');
+    const buscador = document.getElementById('buscador');
+    let datosCargados = [];
+
+    const generosAnime = [16, 10762, 35, 99]; // 16: Animación, 10762: Kids, 35: Comedia, 99: Documental
+
+    function normalizar(texto) {
+      return texto
+        .toLowerCase()
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .replace(/[^a-z0-9\s]/gi, '');
+    }
+
+    function mostrarSkeletons() {
+      contenedor.innerHTML = '';
+      for (let i = 0; i < 9; i++) {
+        const skeleton = document.createElement('div');
+        skeleton.className = 'skeleton rounded';
+        contenedor.appendChild(skeleton);
+      }
+    }
+
+    async function cargarItems(filtro = '') {
+      mostrarSkeletons();
+      datosCargados = [];
+
+      for (const id of items) {
+        let tipo = 'movie';
+        let res = await fetch(`https://api.themoviedb.org/3/movie/${id}?api_key=${apiKey}&language=es-ES`);
+        let data = await res.json();
+
+        if (data.success === false || data.status_code) {
+          res = await fetch(`https://api.themoviedb.org/3/tv/${id}?api_key=${apiKey}&language=es-ES`);
+          data = await res.json();
+          tipo = 'tv';
+        }
+
+        const tieneAnime = data.genres?.some(g => generosAnime.includes(g.id));
+        if (tieneAnime) continue; // ❌ Filtra animes no adminte animes solo película nagi+
+
+        data._tipo = tipo;
+        data._id = id;
+        datosCargados.push(data);
+      }
+
+      datosCargados.sort((a, b) => b.vote_count - a.vote_count);
+      mostrarResultados(filtro);
+    }
+
+    function mostrarResultados(filtro = '') {
+      contenedor.innerHTML = '';
+      let visibles = 0;
+      const f = normalizar(filtro);
+
+      for (const data of datosCargados) {
+        const nombre = data.title || data.name || 'Sin título';
+        const tipo = data._tipo;
+        const nombreNormal = normalizar(nombre);
+
+        const esNombre = f && nombreNormal.includes(f);
+        const esSerie = f === 'serie' && tipo === 'tv';
+        const esPelicula = f === 'pelicula' && tipo === 'movie';
+        const sinFiltro = f === '';
+
+        if (!(sinFiltro || esNombre || esSerie || esPelicula)) continue;
+        if (sinFiltro && visibles >= 9) continue;
+
+        const poster = data.poster_path
+          ? `https://image.tmdb.org/t/p/w300${data.poster_path}`
+          : 'https://via.placeholder.com/120x170?text=Sin+imagen';
+
+        const etiqueta = tipo === 'tv' ? 'Serie' : 'Película';
+
+        const tarjeta = document.createElement('div');
+        tarjeta.className = 'card-3d cursor-pointer w-[120px] text-center';
+        tarjeta.onclick = () => window.location.href = `go:${data._id}`;
+
+        tarjeta.innerHTML = `
+          <div class="relative">
+            <span class="absolute top-1 right-1 text-xs text-white px-2 py-0.5 label-tag">${etiqueta}</span>
+            <img src="${poster}" class="fixed-image" alt="${nombre}">
+          </div>
+          <p class="mt-2 text-xs truncate text-gray-200">${nombre}</p>
+        `;
+
+        contenedor.appendChild(tarjeta);
+        visibles++;
+      }
+
+      if (!contenedor.hasChildNodes()) {
+        contenedor.innerHTML = `<p class="text-center text-gray-400 mt-10">No se encontraron resultados.</p>`;
+      }
+    }
+
+    buscador.addEventListener('input', () => {
+      const texto = buscador.value.trim();
+      mostrarResultados(texto);
+    });
+
+    document.addEventListener('DOMContentLoaded', () => cargarItems());
+  </script>
+</body>
+</html
