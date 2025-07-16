@@ -1,0 +1,103 @@
+<!DOCTYPE html><html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Favoritos - Estilo Netflix Móvil</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    .card {
+      width: 120px;
+      height: 170px;
+      background-color: #111;
+      border-radius: 0.5rem;
+      overflow: hidden;
+      position: relative;
+      transition: transform 0.2s ease;
+    }
+    .card:hover {
+      transform: scale(1.03);
+    }
+    .card img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    .tag {
+      position: absolute;
+      top: 6px;
+      left: 6px;
+      background-color: rgba(168, 85, 247, 0.8);
+      color: white;
+      font-size: 0.7rem;
+      padding: 2px 6px;
+      border-radius: 4px;
+    }
+  </style>
+</head>
+<body class="bg-black text-white font-sans">  <!-- Botón Volver -->  <div class="w-full px-4 py-3 flex justify-between items-center sticky top-0 z-10 bg-black shadow">
+    <h1 class="text-lg font-semibold">🎬 Mis Favoritos</h1>
+    <button onclick="location.href='index.html'" class="text-purple-400 text-sm">Volver</button>
+  </div>  <!-- Contenedor de Favoritos -->  <div id="contenedor" class="flex flex-wrap gap-3 justify-center px-3 pb-20"></div>  <script>
+    const apiKey = 'f91aff7a5c1524c5db2d8b5864747dd6';
+    const contenedor = document.getElementById('contenedor');
+
+    function getFavoritos() {
+      return JSON.parse(localStorage.getItem("favoritos") || "[]");
+    }
+
+    function toggleFavorito(id) {
+      let favs = getFavoritos();
+      favs = favs.filter(f => f !== id);
+      localStorage.setItem("favoritos", JSON.stringify(favs));
+      location.reload();
+    }
+
+    async function cargarFavoritos() {
+      const ids = getFavoritos();
+      const datos = [];
+
+      for (const id of ids) {
+        let tipo = 'movie';
+        let res = await fetch(`https://api.themoviedb.org/3/movie/${id}?api_key=${apiKey}&language=es-ES`);
+        let data = await res.json();
+
+        if (data.success === false || data.status_code) {
+          res = await fetch(`https://api.themoviedb.org/3/tv/${id}?api_key=${apiKey}&language=es-ES`);
+          data = await res.json();
+          tipo = 'tv';
+        }
+
+        // Filtrar solo películas y series (excluir anime)
+        const esAnime = data.genres?.some(g => g.id === 16) && data.original_language === 'ja';
+        if (esAnime) continue;
+
+        datos.push({ ...data, tipo, id });
+      }
+
+      // Ordenar por popularidad
+      datos.sort((a, b) => b.vote_count - a.vote_count);
+
+      contenedor.innerHTML = '';
+      if (datos.length === 0) {
+        contenedor.innerHTML = '<p class="text-center mt-10 text-gray-500">No tienes favoritos aún.</p>';
+        return;
+      }
+
+      for (const item of datos) {
+        const card = document.createElement('a');
+        card.href = `go:${item.id}`;
+        card.className = 'card';
+        card.innerHTML = `
+          <img src="https://image.tmdb.org/t/p/w300${item.poster_path}" alt="${item.title || item.name}">
+          <span class="tag">${item.tipo === 'tv' ? 'Serie' : 'Película'}</span>
+          <div class="text-center mt-1">
+            <button onclick=\"event.preventDefault(); toggleFavorito(${item.id})\" class="text-yellow-400 text-xs mt-1">★ Quitar</button>
+          </div>
+        `;
+        contenedor.appendChild(card);
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', cargarFavoritos);
+  </script></body>
+</html>
