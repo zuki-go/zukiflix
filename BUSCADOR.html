@@ -56,7 +56,7 @@
   <script>
     const apiKey = 'f91aff7a5c1524c5db2d8b5864747dd6';
 
-    // Incluye cualquier ID que quieras, en el generador se encuentra todo
+  
     const items = [
       66732, 93484, 1399, 105971, 214756, 872585, 92749,
       11324, 124905, 508943, 354912, 27205, 414906, 121,
@@ -67,7 +67,7 @@
     const buscador = document.getElementById('buscador');
     let datosCargados = [];
 
-    const generosAnime = [16, 10762, 35, 99]; // 16: Animación, 10762: Kids, 35: Comedia, 99: Documental
+    const generosAnime = [16, 10762, 35, 99]; 
 
     function normalizar(texto) {
       return texto
@@ -102,7 +102,7 @@
         }
 
         const tieneAnime = data.genres?.some(g => generosAnime.includes(g.id));
-        if (tieneAnime) continue; // ❌ Filtra animes no adminte animes solo película nagi+
+        if (tieneAnime) continue; 
 
         data._tipo = tipo;
         data._id = id;
