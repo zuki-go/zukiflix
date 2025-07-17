@@ -68,14 +68,14 @@
           tipo = 'tv';
         }
 
-        // Filtrar solo películas y series (excluir anime)
+        
         const esAnime = data.genres?.some(g => g.id === 16) && data.original_language === 'ja';
         if (esAnime) continue;
 
         datos.push({ ...data, tipo, id });
       }
 
-      // Ordenar por popularidad
+     
       datos.sort((a, b) => b.vote_count - a.vote_count);
 
       contenedor.innerHTML = '';
