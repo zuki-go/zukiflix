@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Reproductor Flixpe</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body class="bg-black m-0 p-0 overflow-hidden">
+
+  <div class="fixed inset-0 z-0">
+    <!-- VIDEO -->
+    <video id="video"
+           class="absolute inset-0 w-full h-full object-fill"
+           playsinline></video>
+
+    <!-- SPINNER -->
+    <div id="spinner" class="absolute inset-0 flex items-center justify-center bg-black/60 z-30">
+      <div class="w-12 h-12 border-4 border-purple-500 border-t-transparent rounded-full animate-spin"></div>
+    </div>
+
+    <!-- CONTROLES -->
+    <div id="controlsOverlay"
+         class="absolute inset-0 flex flex-col justify-between opacity-0 transition-opacity duration-500 pointer-events-none z-40">
+
+      <!-- TOPE -->
+      <div class="flex justify-between items-start p-4 pointer-events-auto">
+        <!-- Botón de regreso con borde SOLO en el ícono -->
+        <button id="backButton" class="hidden">
+          <i data-lucide="arrow-left"
+             class="w-7 h-7 text-white"
+             style="filter: drop-shadow(0 0 0 black) drop-shadow(1px 0 0 black) drop-shadow(0 1px 0 black) drop-shadow(-1px 0 0 black) drop-shadow(0 -1px 0 black);">
+          </i>
+        </button>
+
+        <!-- Texto Flixpe TV (derecha) -->
+        <span id="flixpeTitle"
+              class="text-purple-500 font-extrabold text-xl uppercase tracking-wide hidden"
+              style="text-shadow:
+                -1px -1px 0 black,
+                 1px -1px 0 black,
+                -1px  1px 0 black,
+                 1px  1px 0 black;">
+          Flixpe TV
+        </span>
+      </div>
+
+      <!-- PARTE INFERIOR -->
+      <div class="flex justify-between items-end p-4 bg-gradient-to-t from-black/80 to-transparent pointer-events-auto">
+        <!-- TÍTULO + PLAY -->
+        <div class="flex flex-col items-start gap-2">
+          <h2 id="videoTitle"
+              class="text-purple-500 text-lg sm:text-xl font-bold uppercase tracking-wide"
+              style="text-shadow:
+                -1px -1px 0 black,
+                 1px -1px 0 black,
+                -1px  1px 0 black,
+                 1px  1px 0 black;">
+            Canal Deportes HD
+          </h2>
+          <div class="flex items-center gap-3">
+            <button id="playPause"
+                    class="p-2 rounded-full bg-white/20 hover:bg-white/40 text-white transition">
+              <i data-lucide="play" class="w-6 h-6"></i>
+            </button>
+            <span id="status" class="text-white text-sm">Cargando...</span>
+          </div>
+        </div>
+
+        <!-- FULLSCREEN abajo a la derecha -->
+        <button id="fullscreen"
+                class="p-2 rounded-full bg-white/20 hover:bg-white/40 text-white transition">
+          <i data-lucide="maximize" class="w-6 h-6"></i>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- SCRIPT -->
+  <script>
+    // Extraer parámetros de URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const videoSrc = urlParams.get("linkvivo");
+    const titulo = urlParams.get("título") || "Sin título";
+
+    // Referencias
+    const video = document.getElementById('video');
+    const spinner = document.getElementById('spinner');
+    const playPauseBtn = document.getElementById('playPause');
+    const fullscreenBtn = document.getElementById('fullscreen');
+    const backButton = document.getElementById('backButton');
+    const status = document.getElementById('status');
+    const controlsOverlay = document.getElementById('controlsOverlay');
+    const flixpeTitle = document.getElementById('flixpeTitle');
+    const videoTitle = document.getElementById('videoTitle');
+
+    // Mostrar título desde URL
+    videoTitle.textContent = decodeURIComponent(titulo);
+
+    function showSpinner() {
+      spinner.classList.remove("hidden");
+      status.textContent = "Cargando Flixpe tv...";
+    }
+
+    function hideSpinner() {
+      spinner.classList.add("hidden");
+      status.textContent = "EN VIVO";
+    }
+
+    if (Hls.isSupported() && videoSrc) {
+      const hls = new Hls();
+      hls.loadSource(videoSrc);
+      hls.attachMedia(video);
+      hls.on(Hls.Events.MANIFEST_PARSED, () => {});
+      hls.on(Hls.Events.BUFFER_STALLED, showSpinner);
+      hls.on(Hls.Events.BUFFER_APPENDED, hideSpinner);
+    } else if (video.canPlayType('application/vnd.apple.mpegurl') && videoSrc) {
+      video.src = videoSrc;
+    }
+
+    playPauseBtn.addEventListener('click', () => {
+      if (video.paused) {
+        video.play();
+        status.textContent = 'EN VIVO';
+      } else {
+        video.pause();
+        status.textContent = 'PAUSADO';
+      }
+      updatePlayIcon();
+    });
+
+    function updatePlayIcon() {
+      playPauseBtn.innerHTML = video.paused
+        ? '<i data-lucide="play" class="w-6 h-6"></i>'
+        : '<i data-lucide="pause" class="w-6 h-6"></i>';
+      lucide.createIcons();
+    }
+
+    fullscreenBtn.addEventListener('click', () => {
+      const elem = document.documentElement;
+      if (!document.fullscreenElement) {
+        elem.requestFullscreen();
+      } else {
+        document.exitFullscreen();
+      }
+    });
+
+    document.addEventListener("fullscreenchange", () => {
+      const isFullScreen = !!document.fullscreenElement;
+      backButton.classList.toggle('hidden', !isFullScreen);
+      flixpeTitle.classList.toggle('hidden', !isFullScreen);
+    });
+
+    backButton.addEventListener('click', () => {
+      document.exitFullscreen();
+    });
+
+    let hideTimeout;
+    function toggleControls() {
+      const isVisible = !controlsOverlay.classList.contains("opacity-0");
+      if (isVisible) {
+        controlsOverlay.classList.add("opacity-0");
+      } else {
+        controlsOverlay.classList.remove("opacity-0");
+        clearTimeout(hideTimeout);
+        hideTimeout = setTimeout(() => {
+          controlsOverlay.classList.add("opacity-0");
+        }, 3000);
+      }
+    }
+
+    document.addEventListener("click", toggleControls);
+
+    video.addEventListener("play", () => {
+      updatePlayIcon();
+      hideSpinner();
+    });
+    video.addEventListener("pause", updatePlayIcon);
+    video.addEventListener("waiting", showSpinner);
+    video.addEventListener("playing", hideSpinner);
+
+    toggleControls();
+    showSpinner();
+
+    lucide.createIcons();
+  </script>
+</body>
+  </html>
