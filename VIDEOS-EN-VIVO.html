@@ -11,8 +11,8 @@
       background-color: black;
     }
     #video {
-      width: 100vw;
-      height: 100vh;
+      width: 100%;
+      height: 100%;
       object-fit: cover;
     }
     #controls {
@@ -30,53 +30,54 @@
   </style>
 </head>
 <body class="relative overflow-hidden font-sans">
+  <div id="player" class="relative w-full h-screen">
+    <!-- Video -->
+    <video id="video" class="w-full h-full" playsinline></video>
 
-  <!-- Video -->
-  <video id="video" class="w-full h-full" playsinline></video>
-
-  <!-- Encabezado -->
-  <div class="absolute top-0 left-0 w-full flex justify-between items-center px-4 py-3 bg-gradient-to-b from-black/80 to-transparent z-10">
-    <button onclick="history.back()" class="flex items-center text-white/90 hover:text-white transition">
-      <i data-lucide="arrow-left" class="w-6 h-6 icon-style"></i>
-    </button>
-    <h1 id="videoTitle" class="text-lg font-bold text-white ml-2 truncate max-w-[80%]"></h1>
-  </div>
-
-  <!-- Controles -->
-  <div id="controls" class="absolute inset-0 flex flex-col justify-end p-4 opacity-0 z-10">
-    <!-- Tiempo -->
-    <div class="flex justify-between text-sm text-white/90 mb-1">
-      <span id="currentTime">0:00</span>
-      <span id="duration">0:00</span>
-    </div>
-
-    <!-- Barra de progreso -->
-    <input type="range" id="progressBar" min="0" max="100" value="0" class="w-full mb-3 h-1 accent-purple-600 cursor-pointer" />
-
-    <!-- Botones -->
-    <div class="flex items-center justify-between">
-      <div class="flex items-center gap-3">
-        <button id="playPause" class="p-2 bg-white/20 hover:bg-white/40 rounded-full shadow-lg">
-          <i data-lucide="play" class="w-5 h-5 icon-style"></i>
-        </button>
-        <button id="rewind" class="p-2 bg-white/20 hover:bg-white/40 rounded-full shadow-lg">
-          <i data-lucide="rotate-ccw" class="w-5 h-5 icon-style"></i>
-        </button>
-        <button id="forward" class="p-2 bg-white/20 hover:bg-white/40 rounded-full shadow-lg">
-          <i data-lucide="rotate-cw" class="w-5 h-5 icon-style"></i>
-        </button>
-        <span id="status" class="ml-2 text-white font-medium">Reproduciendo</span>
-      </div>
-      <button id="fullscreen" class="p-2 bg-white/20 hover:bg-white/40 rounded-full shadow-lg">
-        <i data-lucide="maximize" class="w-5 h-5 icon-style"></i>
+    <!-- Encabezado -->
+    <div class="absolute top-0 left-0 w-full flex justify-between items-center px-4 py-3 bg-gradient-to-b from-black/80 to-transparent z-10">
+      <button onclick="history.back()" class="flex items-center text-white/90 hover:text-white transition">
+        <i data-lucide="arrow-left" class="w-6 h-6 icon-style"></i>
       </button>
+      <h1 id="videoTitle" class="text-lg font-bold text-white ml-2 truncate max-w-[80%]"></h1>
     </div>
-  </div>
 
-  <!-- Botón central -->
-  <button id="centerPlay" class="absolute inset-0 m-auto w-16 h-16 bg-white/30 hover:bg-white/50 rounded-full flex items-center justify-center animate-pulse z-10">
-    <i data-lucide="play" class="w-8 h-8 icon-style"></i>
-  </button>
+    <!-- Controles -->
+    <div id="controls" class="absolute inset-0 flex flex-col justify-end p-4 opacity-0 z-10">
+      <!-- Tiempo -->
+      <div class="flex justify-between text-sm text-white/90 mb-1">
+        <span id="currentTime">0:00</span>
+        <span id="duration">0:00</span>
+      </div>
+
+      <!-- Barra de progreso -->
+      <input type="range" id="progressBar" min="0" max="100" value="0" class="w-full mb-3 h-1 accent-purple-600 cursor-pointer" />
+
+      <!-- Botones -->
+      <div class="flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <button id="playPause" class="p-2 bg-white/20 hover:bg-white/40 rounded-full shadow-lg">
+            <i data-lucide="play" class="w-5 h-5 icon-style"></i>
+          </button>
+          <button id="rewind" class="p-2 bg-white/20 hover:bg-white/40 rounded-full shadow-lg">
+            <i data-lucide="rotate-ccw" class="w-5 h-5 icon-style"></i>
+          </button>
+          <button id="forward" class="p-2 bg-white/20 hover:bg-white/40 rounded-full shadow-lg">
+            <i data-lucide="rotate-cw" class="w-5 h-5 icon-style"></i>
+          </button>
+          <span id="status" class="ml-2 text-white font-medium">Reproduciendo</span>
+        </div>
+        <button id="fullscreen" class="p-2 bg-white/20 hover:bg-white/40 rounded-full shadow-lg">
+          <i data-lucide="maximize" class="w-5 h-5 icon-style"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- Botón central -->
+    <button id="centerPlay" class="absolute inset-0 m-auto w-16 h-16 bg-white/30 hover:bg-white/50 rounded-full flex items-center justify-center animate-pulse z-10">
+      <i data-lucide="play" class="w-8 h-8 icon-style"></i>
+    </button>
+  </div>
 
   <script>
     lucide.createIcons();
@@ -93,6 +94,7 @@
     const currentTimeText = document.getElementById('currentTime');
     const durationText = document.getElementById('duration');
     const videoTitle = document.getElementById('videoTitle');
+    const player = document.getElementById('player');
 
     const params = new URLSearchParams(window.location.search);
     const videoUrl = params.get('linkvivo');
@@ -128,6 +130,7 @@
       playPauseBtn.innerHTML = '<i data-lucide="play" class="w-5 h-5 icon-style"></i>';
       lucide.createIcons();
       statusText.textContent = 'Pausado';
+      centerPlay.style.display = 'flex';
     });
 
     video.addEventListener('timeupdate', () => {
@@ -153,7 +156,7 @@
 
     fullscreenBtn.addEventListener('click', () => {
       if (!document.fullscreenElement) {
-        video.requestFullscreen();
+        player.requestFullscreen();
       } else {
         document.exitFullscreen();
       }
