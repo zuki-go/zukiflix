@@ -2,202 +2,191 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Flixpe TV</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Flixpe TV Login</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <script src="https://unpkg.com/lucide@latest"></script>
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyAp7ItpGySkS3EKSCXyoHLWXwevNME3e6U",
+      authDomain: "loginflix-63abe.firebaseapp.com",
+      projectId: "loginflix-63abe",
+      storageBucket: "loginflix-63abe.appspot.com",
+      messagingSenderId: "192569328013",
+      appId: "1:192569328013:web:9e1842c9b95fc41c3e47a6"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+
+    window.login = async () => {
+      const email = values.email;
+      const password = values.password;
+
+      if (!email || !password) {
+        return Swal.fire({
+          icon: 'warning',
+          title: 'Campos incompletos',
+          text: 'Por favor, ingresa tu correo y contraseña.',
+          confirmButtonColor: '#7c3aed'
+        });
+      }
+
+      try {
+        await signInWithEmailAndPassword(auth, email, password);
+        Swal.fire({
+          icon: 'success',
+          title: '¡Bienvenido!',
+          text: 'Inicio de sesión exitoso',
+          timer: 2000,
+          showConfirmButton: false,
+          background: '#111827',
+          color: '#fff'
+        }).then(() => {
+          window.location.href = "home.html";
+        });
+      } catch (error) {
+        Swal.fire({
+          icon: 'error',
+          title: 'Error de inicio de sesión',
+          text: 'Correo o contraseña incorrectos.',
+          confirmButtonColor: '#dc2626'
+        });
+      }
+    };
+  </script>
   <style>
-    body {
-      background-color: black;
-      margin: 0;
-      padding: 0;
+    .key {
+      width: 3.5rem;
+      height: 3.5rem;
+      font-size: 1.2rem;
+      border-radius: 0.75rem;
+      transition: all 0.2s ease;
     }
-    video::-webkit-media-controls {
-      display: none !important;
+    .key:hover {
+      transform: scale(1.05);
+      background-color: #7e22ce;
     }
-    video::-webkit-media-controls-enclosure {
-      display: none !important;
+    .key:focus {
+      outline: 4px solid #9333ea;
     }
-    #video {
-      width: 100vw;
-      height: 100vh;
-      object-fit: cover;
-      background: black;
-    }
-    #controls,
-    #header {
-      transition: opacity 0.3s ease;
-      pointer-events: none;
-    }
-    #controls.show,
-    #header.show {
-      opacity: 1;
-      pointer-events: auto;
-    }
-    .icon-style {
-      color: white;
-      -webkit-text-stroke: 1px black;
+    @media screen and (max-width: 1024px) {
+      .key {
+        width: 2.5rem;
+        height: 2.5rem;
+        font-size: 1rem;
+      }
     }
   </style>
 </head>
-<body class="relative overflow-hidden font-sans">
-  <video id="video" class="w-full h-full" playsinline></video>
-
-  <!-- Encabezado -->
-  <div id="header" class="absolute top-0 left-0 w-full flex items-center px-4 py-3 bg-gradient-to-b from-black/80 to-transparent z-20 opacity-0">
-    <button onclick="history.back()" class="flex items-center text-white">
-      <i data-lucide="arrow-left" class="w-6 h-6 icon-style"></i>
-    </button>
-    <h1 id="videoTitle" class="text-white font-bold text-base ml-3 truncate max-w-[80%]"></h1>
-  </div>
-
-  <!-- Controles -->
-  <div id="controls" class="absolute inset-0 flex flex-col justify-end p-4 z-10 opacity-0">
-    <div class="flex justify-between text-sm text-white mb-1">
-      <span id="currentTime">0:00</span>
-      <span id="duration">0:00</span>
-    </div>
-    <input type="range" id="progressBar" min="0" max="100" value="0" class="w-full mb-3 h-1 accent-purple-600 cursor-pointer" />
-    <div class="flex items-center justify-between">
-      <div class="flex items-center gap-3">
-        <button id="playPause" class="p-2 bg-white/20 hover:bg-white/40 rounded-full shadow-lg">
-          <i data-lucide="play" class="w-5 h-5 icon-style"></i>
+<body class="bg-black text-white w-screen h-screen overflow-hidden">
+  <div class="flex flex-row w-full h-full overflow-hidden">
+    <!-- Teclado a la izquierda -->
+    <div class="w-1/2 lg:w-1/2 flex flex-col items-center justify-center p-2 space-y-4 overflow-hidden">
+      <div class="flex space-x-2">
+        <button onclick="toggleCase()" class="bg-blue-600 text-white key flex items-center justify-center">
+          <i data-lucide="arrow-up"></i>
         </button>
-        <button id="rewind" class="p-2 bg-white/20 hover:bg-white/40 rounded-full shadow-lg">
-          <i data-lucide="rotate-ccw" class="w-5 h-5 icon-style"></i>
+        <button onclick="toggleSymbolMode()" class="bg-yellow-500 text-black key flex items-center justify-center">
+          <i data-lucide="hash"></i>
         </button>
-        <button id="forward" class="p-2 bg-white/20 hover:bg-white/40 rounded-full shadow-lg">
-          <i data-lucide="rotate-cw" class="w-5 h-5 icon-style"></i>
+        <button onclick="deleteChar()" class="bg-red-600 text-white key flex items-center justify-center">
+          <i data-lucide="delete"></i>
         </button>
-        <span id="status" class="ml-2 text-white font-medium text-sm">Reproduciendo</span>
       </div>
-      <button id="fullscreen" class="p-2 bg-white/20 hover:bg-white/40 rounded-full shadow-lg">
-        <i data-lucide="maximize" class="w-5 h-5 icon-style"></i>
+      <div id="keyboard" class="grid grid-cols-7 gap-2"></div>
+      <button onclick="addChar(' ')" class="bg-gray-700 text-white key w-1/2">Espacio</button>
+    </div>
+
+    <!-- Formulario a la derecha -->
+    <div class="w-1/2 lg:w-1/2 flex flex-col justify-center items-center p-2 space-y-6 overflow-hidden">
+      <h1 class="text-4xl lg:text-5xl font-bold text-purple-400">LoginFlix TV</h1>
+      <input id="focusedInput" readonly class="text-xl lg:text-2xl text-center w-11/12 lg:w-3/4 p-4 rounded-xl bg-neutral-800 border border-purple-500 placeholder-purple-300" placeholder="Selecciona un campo"/>
+
+      <button onclick="focusField('email')" id="emailField" class="w-11/12 lg:w-3/4 bg-neutral-900 text-xl lg:text-2xl px-4 lg:px-6 py-4 rounded-xl border border-neutral-700 flex items-center justify-start">
+        <i data-lucide="mail" class="mr-2"></i> Correo: <span id="emailValue" class="text-purple-300 ml-2"></span>
       </button>
+      <button onclick="focusField('password')" id="passwordField" class="w-11/12 lg:w-3/4 bg-neutral-900 text-xl lg:text-2xl px-4 lg:px-6 py-4 rounded-xl border border-neutral-700 flex items-center justify-start">
+        <i data-lucide="lock" class="mr-2"></i> Contraseña: <span id="passwordValue" class="text-purple-300 ml-2"></span>
+      </button>
+
+      <button onclick="login()" class="bg-purple-600 hover:bg-purple-700 text-white px-8 py-4 rounded-full text-xl lg:text-2xl flex items-center gap-2">
+        <i data-lucide="log-in"></i> Iniciar sesión
+      </button>
+      <div class="text-purple-400 text-md lg:text-lg">Regístrate desde la app móvil</div>
     </div>
   </div>
-
-  <!-- Botón Play central -->
-  <button id="centerPlay" class="absolute inset-0 m-auto w-16 h-16 bg-white/30 hover:bg-white/50 rounded-full flex items-center justify-center animate-pulse z-20">
-    <i data-lucide="play" class="w-8 h-8 icon-style"></i>
-  </button>
 
   <script>
-    lucide.createIcons();
-    const video = document.getElementById('video');
-    const controls = document.getElementById('controls');
-    const header = document.getElementById('header');
-    const playPauseBtn = document.getElementById('playPause');
-    const centerPlay = document.getElementById('centerPlay');
-    const progressBar = document.getElementById('progressBar');
-    const statusText = document.getElementById('status');
-    const rewind = document.getElementById('rewind');
-    const forward = document.getElementById('forward');
-    const fullscreenBtn = document.getElementById('fullscreen');
-    const currentTimeText = document.getElementById('currentTime');
-    const durationText = document.getElementById('duration');
-    const videoTitle = document.getElementById('videoTitle');
+    let currentField = null;
+    let upperCase = false;
+    let symbolMode = false;
 
-    const params = new URLSearchParams(window.location.search);
-    const videoUrl = params.get('linkvivo');
-    const titulo = params.get('titulo');
-
-    if (videoUrl) video.src = videoUrl;
-    if (titulo) videoTitle.textContent = decodeURIComponent(titulo);
-
-    let hideTimeout;
-    const showControls = () => {
-      controls.classList.add("show");
-      header.classList.add("show");
-      clearTimeout(hideTimeout);
-      hideTimeout = setTimeout(() => {
-        controls.classList.remove("show");
-        header.classList.remove("show");
-      }, 3000);
+    const values = {
+      email: "",
+      password: ""
     };
 
-    const togglePlay = () => video.paused ? video.play() : video.pause();
+    const keyboard = document.getElementById("keyboard");
 
-    playPauseBtn.addEventListener('click', () => {
-      togglePlay();
-      showControls();
-    });
+    const letters = "abcdefghijklmnopqrstuvwxyz".split("");
+    const symbols = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "0", "@", ".", "-", "_", "!", "#", "$", "%", "&", "*", "+", "=", "/"];
 
-    centerPlay.addEventListener('click', () => togglePlay());
+    function renderKeyboard() {
+      keyboard.innerHTML = "";
+      const keys = symbolMode ? symbols : letters;
+      keys.forEach(char => {
+        const btn = document.createElement("button");
+        btn.className = "bg-neutral-700 text-white key";
+        btn.textContent = upperCase && !symbolMode ? char.toUpperCase() : char;
+        btn.onclick = () => addChar(btn.textContent);
+        keyboard.appendChild(btn);
+      });
+    }
 
-    video.addEventListener('play', () => {
-      playPauseBtn.innerHTML = '<i data-lucide="pause" class="w-5 h-5 icon-style"></i>';
+    function toggleCase() {
+      upperCase = !upperCase;
+      renderKeyboard();
+    }
+
+    function toggleSymbolMode() {
+      symbolMode = !symbolMode;
+      renderKeyboard();
+    }
+
+    function focusField(field) {
+      currentField = field;
+      document.getElementById("focusedInput").placeholder = field === "email" ? "Escribiendo correo..." : "Escribiendo contraseña...";
+      document.getElementById("focusedInput").value = values[field];
+    }
+
+    function addChar(c) {
+      if (!currentField) return;
+      values[currentField] += c;
+      updateDisplay();
+    }
+
+    function deleteChar() {
+      if (!currentField) return;
+      values[currentField] = values[currentField].slice(0, -1);
+      updateDisplay();
+    }
+
+    function updateDisplay() {
+      document.getElementById("emailValue").textContent = values.email;
+      document.getElementById("passwordValue").textContent = "*".repeat(values.password.length);
+      document.getElementById("focusedInput").value = values[currentField];
+    }
+
+    window.onload = () => {
+      focusField("email");
+      renderKeyboard();
       lucide.createIcons();
-      centerPlay.style.display = 'none';
-      statusText.textContent = 'Reproduciendo';
-    });
-
-    video.addEventListener('pause', () => {
-      playPauseBtn.innerHTML = '<i data-lucide="play" class="w-5 h-5 icon-style"></i>';
-      lucide.createIcons();
-      centerPlay.style.display = 'flex';
-      statusText.textContent = 'Pausado';
-    });
-
-    video.addEventListener('timeupdate', () => {
-      const value = (video.currentTime / video.duration) * 100;
-      progressBar.value = value || 0;
-      currentTimeText.textContent = formatTime(video.currentTime);
-      durationText.textContent = formatTime(video.duration);
-    });
-
-    progressBar.addEventListener('input', () => {
-      video.currentTime = (progressBar.value / 100) * video.duration;
-    });
-
-    rewind.addEventListener('click', () => {
-      video.currentTime -= 10;
-      showControls();
-    });
-
-    forward.addEventListener('click', () => {
-      video.currentTime += 10;
-      showControls();
-    });
-
-    fullscreenBtn.addEventListener('click', () => {
-      const container = document.documentElement;
-
-      if (!document.fullscreenElement) {
-        container.requestFullscreen().then(() => {
-          // Forzar orientación horizontal
-          if (screen.orientation && screen.orientation.lock) {
-            screen.orientation.lock("landscape").catch(() => {
-              console.warn("No se pudo forzar orientación landscape.");
-            });
-          }
-        });
-      } else {
-        document.exitFullscreen();
-      }
-
-      showControls();
-    });
-
-    document.body.addEventListener('click', (e) => {
-      if (!e.target.closest('button') && !e.target.closest('input')) {
-        const isVisible = controls.classList.contains("show");
-        isVisible ? controls.classList.remove("show") : showControls();
-        isVisible ? header.classList.remove("show") : showControls();
-      } else {
-        showControls();
-      }
-    });
-
-    const formatTime = (time) => {
-      if (isNaN(time)) return "0:00";
-      const hrs = Math.floor(time / 3600);
-      const mins = Math.floor((time % 3600) / 60);
-      const secs = Math.floor(time % 60);
-      return `${hrs > 0 ? hrs + ':' : ''}${mins}:${secs.toString().padStart(2, '0')}`;
     };
-
-    showControls();
   </script>
 </body>
 </html>
