@@ -77,6 +77,7 @@
     </div>
   </div>
 
+  <!-- Botón Play central -->
   <button id="centerPlay" class="absolute inset-0 m-auto w-16 h-16 bg-white/30 hover:bg-white/50 rounded-full flex items-center justify-center animate-pulse z-20">
     <i data-lucide="play" class="w-8 h-8 icon-style"></i>
   </button>
@@ -161,11 +162,20 @@
 
     fullscreenBtn.addEventListener('click', () => {
       const container = document.documentElement;
+
       if (!document.fullscreenElement) {
-        container.requestFullscreen();
+        container.requestFullscreen().then(() => {
+          // Forzar orientación horizontal
+          if (screen.orientation && screen.orientation.lock) {
+            screen.orientation.lock("landscape").catch(() => {
+              console.warn("No se pudo forzar orientación landscape.");
+            });
+          }
+        });
       } else {
         document.exitFullscreen();
       }
+
       showControls();
     });
 
