@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Flixpe TV</title>
+  <title>Flixpe TV videos pasados</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://unpkg.com/lucide@latest"></script>
   <style>
@@ -64,15 +64,15 @@
 </head>
 <body class="font-sans text-white">
 
-  <!-- Spinner de carga -->
+
   <div id="spinner">
     <div class="animate-spin rounded-full h-16 w-16 border-t-4 border-white border-opacity-50"></div>
   </div>
 
-  <!-- Video -->
+
   <video id="video" playsinline></video>
 
-  <!-- Encabezado -->
+
   <div id="header" class="absolute top-0 left-0 w-full px-4 py-3 z-20 opacity-0 shadow-top">
     <div class="flex items-center">
       <button onclick="history.back()" class="flex items-center text-white">
@@ -82,7 +82,6 @@
     </div>
   </div>
 
-  <!-- Controles -->
   <div id="controls" class="absolute bottom-0 left-0 w-full px-4 py-4 z-20 opacity-0 shadow-bottom">
     <div class="flex justify-between text-sm mb-1">
       <span id="currentTime">0:00</span>
@@ -108,7 +107,6 @@
     </div>
   </div>
 
-  <!-- Botón de play central -->
   <button id="centerPlay" class="absolute inset-0 m-auto w-16 h-16 bg-white/30 hover:bg-white/50 rounded-full flex items-center justify-center animate-pulse z-30">
     <i data-lucide="play" class="w-8 h-8 icon-style"></i>
   </button>
@@ -202,7 +200,7 @@
       try {
         if (!document.fullscreenElement) {
           await document.documentElement.requestFullscreen();
-          // Forzar landscape
+ 
           if (screen.orientation && screen.orientation.lock) {
             await screen.orientation.lock('landscape').catch(() => {});
           }
